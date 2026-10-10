@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#0b1020">
+<title>JURUTEK — Escape the Circuit</title>
+<style>
+:root{--bg:#0b1020;--panel:#141c32;--panel2:#1b2742;--ink:#f3f6ff;--muted:#aab7d5;--cyan:#57e6e6;--lime:#c8ff65;--pink:#ff6ca8;--gold:#ffd166}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top,#1a2b4d 0,#0b1020 55%);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;min-height:100vh}
+main{max-width:760px;margin:auto;padding:18px 14px 30px}.brand{display:flex;align-items:center;gap:10px}.logo{width:42px;height:42px;border-radius:13px;background:linear-gradient(135deg,var(--cyan),var(--lime));display:grid;place-items:center;color:#0b1020;font-size:24px;font-weight:900;box-shadow:0 0 25px #57e6e633}.eyebrow{font-size:11px;letter-spacing:2px;color:var(--cyan);font-weight:800}.brand h1{font-size:clamp(24px,6vw,36px);margin:0;line-height:1.1}.sub{color:var(--muted);margin:10px 0 16px;font-size:14px}
+.panel{background:#141c32eF;border:1px solid #ffffff18;border-radius:20px;padding:14px;box-shadow:0 14px 35px #0003;margin-top:12px}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.stat{background:var(--panel2);border-radius:13px;padding:10px 8px;text-align:center}.stat small{display:block;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:1px}.stat strong{display:block;font-size:22px;margin-top:2px;font-variant-numeric:tabular-nums}
+.gamehead{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:12px}.levelname{font-weight:800}.pill{font-size:11px;background:#57e6e61c;border:1px solid #57e6e655;color:var(--cyan);border-radius:999px;padding:5px 9px;font-weight:800}
+#mazeWrap{display:flex;justify-content:center;align-items:center;background:#080d19;border:1px solid #ffffff18;border-radius:16px;padding:8px;touch-action:none;min-height:220px}canvas{display:block;width:min(100%,520px);height:auto;image-rendering:auto;touch-action:none}
+.actions{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}.btn{border:0;border-radius:13px;padding:13px 10px;font-weight:800;font-size:14px;background:var(--cyan);color:#08121d;cursor:pointer;min-height:46px}.btn.secondary{background:#273653;color:var(--ink);border:1px solid #ffffff18}.btn.lime{background:var(--lime)}.btn:active{transform:scale(.98)}.dpad{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;max-width:260px;margin:12px auto 0}.dpad button{font-size:22px;padding:8px;min-height:48px}.hint{font-size:12px;color:var(--muted);text-align:center;margin:10px 0 0}.row{display:flex;gap:8px;align-items:center}.row input{min-width:0;flex:1}.input{width:100%;background:#0b1327;border:1px solid #ffffff25;border-radius:11px;padding:12px;color:var(--ink);font:inherit}.sectiontitle{font-size:17px;font-weight:850;margin:0 0 10px}.boardrow{display:grid;grid-template-columns:34px 1fr auto;gap:8px;align-items:center;padding:9px 0;border-bottom:1px solid #ffffff12;font-size:14px}.boardrow:last-child{border:0}.rank{color:var(--gold);font-weight:900}.score{font-weight:900;color:var(--lime);font-variant-numeric:tabular-nums}.status{font-size:12px;color:var(--muted);margin-top:8px;min-height:16px}.notice{font-size:12px;line-height:1.5;color:var(--muted)}.footer{text-align:center;color:#7f8eaf;font-size:11px;margin-top:18px}.hidden{display:none!important}
+@media(min-width:600px){main{padding-top:26px}.panel{padding:18px}}
+</style>
+</head>
+<body>
+<main>
+  <header class="brand"><div class="logo">ϟ</div><div><div class="eyebrow">JURUTEK • ENGINEERING ARCADE</div><h1>Escape the Circuit</h1></div></header>
+  <p class="sub">Find the exit. Keep moving. Watch your hearts. ⚡</p>
+  <section class="panel">
+    <div class="stats">
+      <div class="stat"><small>Level</small><strong id="level">1</strong></div>
+      <div class="stat"><small>Time</small><strong id="time">00:00</strong></div>
+      <div class="stat"><small>Score</small><strong id="score">0</strong></div>
+      <div class="stat"><small>Hearts</small><strong id="hearts" aria-label="5 hearts">❤️❤️❤️❤️❤️</strong></div>
+    </div>
+  </section>
+  <section class="panel">
+    <div class="gamehead"><div><div class="levelname" id="levelTitle">Level 1: First Connection</div><div class="notice" id="levelNote">Reach the glowing exit.</div></div><span class="pill" id="difficulty">EASY</span></div>
+    <div id="mazeWrap"><canvas id="maze" width="400" height="400" aria-label="Maze game board"></canvas></div>
+    <div class="dpad" aria-label="Movement controls">
+      <span></span><button class="btn secondary" data-move="up" aria-label="Move up">▲</button><span></span>
+      <button class="btn secondary" data-move="left" aria-label="Move left">◀</button><button class="btn secondary" data-move="down" aria-label="Move down">▼</button><button class="btn secondary" data-move="right" aria-label="Move right">▶</button>
+    </div>
+    <p class="hint">Use the arrows, swipe on the maze, or use your keyboard. Reach the green exit. Each wall hit costs 1 heart — lose all 5 and it’s game over!</p>
+    <div class="actions"><button class="btn secondary" id="restart">Restart level</button><button class="btn lime" id="start">Start Game</button><button class="btn" id="newRun">New run</button></div>
+    <p class="status" id="message" role="status">Tap Start when you're ready.</p>
+  </section>
+  <section class="panel">
+    <h2 class="sectiontitle">🏆 Booth leaderboard</h2>
+    <p class="notice">Enter a nickname and submit your best run. Submit your score to join the shared leaderboard.</p>
+    <div class="row" style="margin:10px 0"><input id="nickname" class="input" maxlength="16" placeholder="Your nickname (max 16)" autocomplete="nickname"><button class="btn" id="submitScore">Submit score</button></div>
+    <div id="board"><div class="notice">Connecting to shared leaderboard…</div></div>
+    <div id="boardStatus" class="status">Local score is saved on this phone.</div>
+  </section>
+  <p class="footer">Made for JURUTEK • Play fair, think fast, escape the circuit.</p>
+</main>
+<script>
+(() => {
+const $ = id => document.getElementById(id);
+const canvas = $('maze'), ctx = canvas.getContext('2d', { alpha: false });
+const mazeLayer = document.createElement('canvas'); mazeLayer.width = mazeLayer.height = 400;
+const mazeCtx = mazeLayer.getContext('2d', { alpha: false });
+const COLORS = {bg:'#080d19',wall:'#334764',wallEdge:'#526987',path:'#111c31',grid:'#263752',player:'#57e6e6',exit:'#c8ff65',accent:'#ff6ca8',gold:'#ffd166',text:'#f3f6ff'};
+const DEFAULT_FIREBASE_URL='https://jurutek-escape-circuit-default-rtdb.asia-southeast1.firebasedatabase.app';
+let level=1, maze=null, player={x:0,y:0}, started=false, paused=false, finished=false, startAt=0, elapsed=0, tick=null, score=0, hearts=5, best=Number(localStorage.getItem('jurutek_best')||0), dbUrl=DEFAULT_FIREBASE_URL;
+const names=['First Connection','Signal Search','Debug the Maze','Power Surge','Final Circuit','Overclocked'];
+function sizeForLevel(n){return Math.min(25, 9 + Math.floor((n-1)/2)*2 + (n>5?2:0));}
+function difficultyFor(n){return n<3?'EASY':n<6?'MEDIUM':'HARD';}
+function formatTime(s){s=Math.max(0,Math.floor(s));return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');}
+function makeMaze(w,h){
+  const g=Array.from({length:h},()=>Array(w).fill(1));
+  const stack=[[0,0]];g[0][0]=0;
+  while(stack.length){
+    const [x,y]=stack[stack.length-1];
+    const opts=[];
+    for(const [dx,dy] of [[0,-2],[2,0],[0,2],[-2,0]]){
+      const nx=x+dx,ny=y+dy;
+      if(nx>=0&&ny>=0&&nx<w&&ny<h&&g[ny][nx]===1)opts.push([nx,ny,dx,dy]);
+    }
+    if(!opts.length){stack.pop();continue;}
+    const [nx,ny,dx,dy]=opts[Math.floor(Math.random()*opts.length)];
+    g[y+dy/2][x+dx/2]=0;g[ny][nx]=0;stack.push([nx,ny]);
+  }
+  // Add a few loops at higher levels, but keep the maze solvable.
+  const extra=Math.floor(w*h*Math.min(.04,.005*level));
+  for(let i=0;i<extra;i++){
+    const x=1+Math.floor(Math.random()*(w-2)),y=1+Math.floor(Math.random()*(h-2));
+    if(g[y][x]===1 && ((g[y][x-1]===0&&g[y][x+1]===0)||(g[y-1][x]===0&&g[y+1][x]===0)))g[y][x]=0;
+  }
+  return g;
+}
+function updateHearts(){ $('hearts').textContent='❤️'.repeat(hearts)+'🖤'.repeat(5-hearts); $('hearts').setAttribute('aria-label',`${hearts} of 5 hearts remaining`); }
+function newLevel(){
+  const n=sizeForLevel(level); maze=makeMaze(n,n);player={x:0,y:0};maze[0][0]=0;maze[n-1][n-1]=0;
+  finished=false;
+  $('level').textContent=level;$('levelTitle').textContent=`Level ${level}: ${names[Math.min(level-1,names.length-1)]}`;
+  $('levelNote').textContent=`${n} × ${n} maze • Find the exit at the bottom-right.`;
+  $('difficulty').textContent=difficultyFor(level);$('time').textContent=formatTime(elapsed);$('message').textContent=paused?'Paused — tap Resume to continue.':(started?'Keep going! Find the exit.':'Tap Start Game when you’re ready.');updateHearts();
+  renderMaze();
+  draw();
+}
+function renderMaze(){
+  if(!maze)return;
+  const n=maze.length, cell=Math.floor(400/n), off=(400-cell*n)/2;
+  // Cache the static maze so each move only redraws the player and exit.
+  mazeCtx.clearRect(0,0,400,400);mazeCtx.fillStyle=COLORS.bg;mazeCtx.fillRect(0,0,400,400);
+  for(let y=0;y<n;y++)for(let x=0;x<n;x++){
+    const px=off+x*cell,py=off+y*cell;
+    mazeCtx.fillStyle=maze[y][x]===1?COLORS.wall:COLORS.path;mazeCtx.fillRect(px,py,cell,cell);
+    if(maze[y][x]===1){mazeCtx.strokeStyle=COLORS.wallEdge;mazeCtx.lineWidth=Math.max(1,cell*.035);mazeCtx.strokeRect(px+1,py+1,cell-2,cell-2);}
+    else {mazeCtx.strokeStyle=COLORS.grid;mazeCtx.lineWidth=.5;mazeCtx.strokeRect(px,py,cell,cell);}
+  }
+  mazeCtx.fillStyle=COLORS.exit;mazeCtx.globalAlpha=.22;mazeCtx.fillRect(off+(n-1)*cell+2,off+(n-1)*cell+2,cell-4,cell-4);mazeCtx.globalAlpha=1;
+  mazeCtx.strokeStyle=COLORS.exit;mazeCtx.lineWidth=Math.max(2,cell*.09);mazeCtx.strokeRect(off+(n-1)*cell+cell*.23,off+(n-1)*cell+cell*.23,cell*.54,cell*.54);
+  mazeCtx.fillStyle=COLORS.exit;mazeCtx.font=`bold ${Math.max(10,cell*.42)}px system-ui`;mazeCtx.textAlign='center';mazeCtx.textBaseline='middle';mazeCtx.fillText('↗',off+(n-.5)*cell,off+(n-.5)*cell);
+}
+function draw(){
+  if(!maze)return;
+  const n=maze.length, cell=Math.floor(400/n), off=(400-cell*n)/2;
+  ctx.clearRect(0,0,400,400);
+  ctx.drawImage(mazeLayer,0,0);
+  const cx=off+(player.x+.5)*cell,cy=off+(player.y+.5)*cell;
+  ctx.beginPath();ctx.fillStyle=COLORS.player;ctx.arc(cx,cy,Math.max(3,cell*.28),0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.fillStyle='#ffffff';ctx.arc(cx-cell*.07,cy-cell*.08,Math.max(1.5,cell*.08),0,Math.PI*2);ctx.fill();
+}
+function updateClock(){if(started&&!finished){elapsed=(Date.now()-startAt)/1000;$('time').textContent=formatTime(elapsed);}}
+function start(){
+  if(finished)return;
+  if(!started){
+    started=true;paused=false;startAt=Date.now()-elapsed*1000;
+    $('start').textContent='Pause';$('message').textContent='Go! Find the exit.';
+    if(tick)clearInterval(tick);tick=setInterval(updateClock,250);
+  }else{
+    updateClock();started=false;paused=true;
+    $('start').textContent='Resume';$('message').textContent='Paused — tap Resume or move to continue.';
+    if(tick)clearInterval(tick);tick=null;
+  }
+}
+function move(dx,dy){
+  if(finished)return;if(!started)start();
+  const nx=player.x+dx,ny=player.y+dy;
+  if(ny<0||nx<0||ny>=maze.length||nx>=maze.length||maze[ny][nx]===1){
+    if(navigator.vibrate)navigator.vibrate([35,35]);
+    hearts=Math.max(0,hearts-1);updateHearts();
+    if(hearts===0){gameOver();return;}
+    $('message').textContent=`Ouch! You hit a wall. ${hearts} heart${hearts===1?'':'s'} left.`;return;
+  }
+  player={x:nx,y:ny};draw();
+  if(nx===maze.length-1&&ny===maze.length-1)win();
+}
+function gameOver(){
+  updateClock();finished=true;started=false;paused=false;if(tick)clearInterval(tick);tick=null;
+  $('message').textContent=`💔 GAME OVER! You ran out of hearts. Final score: ${score}. Tap New run to try again.`;
+  $('start').textContent='Game Over';paused=false;draw();
+}
+function win(){
+  updateClock();
+  const timeBonus=Math.max(0,Math.round(120-elapsed));const levelPoints=level*100;
+  const earned=levelPoints+timeBonus;score+=earned;
+  $('score').textContent=score;
+  $('message').textContent=`Circuit escaped! +${earned} points. Loading level ${level+1}…`;
+  if(score>best){best=score;localStorage.setItem('jurutek_best',String(best));}
+  draw();
+  setTimeout(()=>{if(hearts<=0)return;level++;newLevel();$('message').textContent=`Level ${level} ready — timer continues!`;},650);
+}
+function restart(){if(finished && hearts===0)return;newLevel();$('message').textContent=started?'Level restarted — your timer continues.':'Level restarted. Tap Start Game to begin.';}
+function newRun(){if(tick)clearInterval(tick);tick=null;level=1;score=0;hearts=5;elapsed=0;startAt=0;started=false;paused=false;finished=false;$('score').textContent='0';$('start').textContent='Start Game';newLevel();$('message').textContent='New run ready — tap Start Game.';}
+document.querySelectorAll('[data-move]').forEach(b=>b.addEventListener('click',()=>{const m=b.dataset.move;({up:()=>move(0,-1),down:()=>move(0,1),left:()=>move(-1,0),right:()=>move(1,0)})[m]();}));
+$('start').addEventListener('click',start);$('restart').addEventListener('click',restart);$('newRun').addEventListener('click',newRun);
+window.addEventListener('keydown',e=>{const m={ArrowUp:[0,-1],w:[0,-1],ArrowDown:[0,1],s:[0,1],ArrowLeft:[-1,0],a:[-1,0],ArrowRight:[1,0],d:[1,0]}[e.key];if(m){e.preventDefault();move(...m);}});
+let touchStart=null;
+canvas.addEventListener('touchstart',e=>{const t=e.changedTouches[0];touchStart=[t.clientX,t.clientY];},{passive:true});
+canvas.addEventListener('touchend',e=>{if(!touchStart)return;const t=e.changedTouches[0],dx=t.clientX-touchStart[0],dy=t.clientY-touchStart[1];touchStart=null;if(Math.max(Math.abs(dx),Math.abs(dy))<16)return;if(Math.abs(dx)>Math.abs(dy))move(dx>0?1:-1,0);else move(0,dy>0?1:-1);},{passive:true});
+function normaliseUrl(s){return s.trim().replace(/\/+$/,'');}
+function setStatus(s){$('boardStatus').textContent=s;}
+async function getScores(){
+  if(!dbUrl){$('board').innerHTML='<div class="notice">Connecting to shared leaderboard…</div>';return;}
+  try{
+    const r=await fetch(dbUrl+'/scores.json');if(!r.ok)throw new Error('Database read failed');
+    const data=await r.json();const items=Object.values(data||{}).filter(x=>x&&typeof x.name==='string'&&Number.isFinite(Number(x.score)));
+    items.sort((a,b)=>Number(b.score)-Number(a.score));
+    $('board').innerHTML=items.slice(0,10).map((x,i)=>`<div class="boardrow"><span class="rank">#${i+1}</span><span>${escapeHtml(x.name)}</span><span class="score">${Math.floor(Number(x.score))}</span></div>`).join('')||'<div class="notice">No scores yet — be the first!</div>';
+    setStatus('Shared leaderboard connected • refreshes every 8 seconds.');
+  }catch(e){setStatus('Could not load shared scores. Check your database URL and rules.');}
+}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+$('submitScore').addEventListener('click',async()=>{
+  const name=$('nickname').value.trim().replace(/\s+/g,' ').slice(0,16);
+  if(!name){setStatus('Enter a nickname first.');$('nickname').focus();return;}
+  if(score<=0){setStatus('Escape at least one level before submitting a score.');return;}
+  const localKey='jurutek_submitted_'+name.toLowerCase();
+  if(!dbUrl){setStatus(`Saved on this phone only: ${name} — ${score}. Connect Firebase for a shared board.`);localStorage.setItem(localKey,String(Math.max(score,Number(localStorage.getItem(localKey)||0))));return;}
+  try{
+    const r=await fetch(dbUrl+'/scores.json',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,score,level:level-1,timeSeconds:Math.round(elapsed),createdAt:Date.now()})});
+    if(!r.ok)throw new Error('Submit failed');setStatus('Score submitted to the shared leaderboard!');await getScores();
+  }catch(e){setStatus('Score could not be submitted. Check Firebase rules and connection.');}
+});
+$('boardStatus').textContent='Connecting to shared leaderboard…';
+newLevel();$('start').textContent='Start Game';getScores();setInterval(()=>{if(dbUrl && !document.hidden)getScores();},20000);
+})();
+</script>
+</body>
+</html>
